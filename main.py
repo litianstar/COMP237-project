@@ -7,7 +7,7 @@ import pickle
 
 if __name__ == "__main__":
     # 数据加载与预处理 Data Loading and Preprocessing
-    file_path = '/Users/troy/Documents/COMP237project/Youtube05-Shakira.csv'
+    file_path = './Youtube05-Shakira.csv'
     data = load_data(file_path)
     data = preprocess_data(data)
 
