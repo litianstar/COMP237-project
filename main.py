@@ -3,6 +3,7 @@ from model_training import train_model, evaluate_model
 from predict_comments import predict_comments
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import pandas as pd
 import pickle
 
 if __name__ == "__main__":
@@ -70,17 +71,34 @@ if __name__ == "__main__":
         "The cinematography is truly beautiful.",   # Not Spam
         "Claim your prize now by clicking here!"    # Spam
     ]
-    
-    # 使用 Bag-of-Words 模型预测 / Predict using Bag-of-Words model
-    print("\nBag-of-Words 模型结果 / Bag-of-Words Model Results:")
-    predictions_bow = predict_comments(new_comments, vectorizer_bow, model_bow)
-    for comment, prediction in zip(new_comments, predictions_bow):
-        print(f"评论 / Comment: {comment} -> {'垃圾评论 / Spam' if prediction == 1 else '非垃圾评论 / Not Spam'}")
-    
-    # 使用 TF-IDF 模型预测 / Predict using TF-IDF model
-    print("\nTF-IDF 模型结果 / TF-IDF Model Results:")
-    predictions_tfidf = predict_comments(new_comments, vectorizer_tfidf, model_tfidf, tfidf_transformer=tfidf_transformer)
-    for comment, prediction in zip(new_comments, predictions_tfidf):
-        print(f"评论 / Comment: {comment} -> {'垃圾评论 / Spam' if prediction == 1 else '非垃圾评论 / Not Spam'}")
 
+    # 获取 Bag-of-Words 模型预测 / Predictions using Bag-of-Words model
+    predictions_bow, probabilities_bow = predict_comments(new_comments, vectorizer_bow, model_bow)
+
+    # 获取 TF-IDF 模型预测 / Predictions using TF-IDF model
+    predictions_tfidf, probabilities_tfidf = predict_comments(new_comments, vectorizer_tfidf, model_tfidf, tfidf_transformer=tfidf_transformer)
+
+    # 构造结果表格 / Construct Results Table
+    results = pd.DataFrame({
+        "ID": range(1, len(new_comments) + 1),
+        "Comment": new_comments,
+        "Bag-of-Words Prediction": ["垃圾评论 / Spam" if pred == 1 else "非垃圾评论 / Not Spam" for pred in predictions_bow],
+        "BOW Spam Probability (%)": [f"{prob * 100:.2f}%" for prob in probabilities_bow],
+        "TF-IDF Prediction": ["垃圾评论 / Spam" if pred == 1 else "非垃圾评论 / Not Spam" for pred in predictions_tfidf],
+        "TF-IDF Spam Probability (%)": [f"{prob * 100:.2f}%" for prob in probabilities_tfidf]
+    })
+
+    # 输出表格 / Print Table
+    print("\n========== 预测结果表格 / Prediction Results Table ==========")
+    print(results.to_string(index=False))
+# 在表格后添加简要说明 / Add a summary explanation after the table
+print("\n========== 结果说明 / Result Explanation ==========")
+print("""
+- BOW Spam Probability (%): Bag-of-Words 模型对垃圾评论的概率评分。
+- TF-IDF Spam Probability (%): TF-IDF 模型对垃圾评论的概率评分。
+- 概率范围 / Probability Range:
+    - 0%-30%: 高可能为非垃圾评论 / High likelihood of Not Spam.
+    - 30%-70%: 不确定，建议人工审核 / Uncertain, manual review recommended.
+    - 70%-100%: 高可能为垃圾评论 / High likelihood of Spam.
+""")
     

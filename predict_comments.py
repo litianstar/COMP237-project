@@ -9,7 +9,7 @@ def predict_comments(new_comments, vectorizer, model, tfidf_transformer=None):
         model: 已训练的分类模型 / Trained classification model
         tfidf_transformer: 可选的 TF-IDF 转换器 / Optional TF-IDF transformer
     返回值 / Returns:
-        list: 预测的类别 / Predicted categories
+        tuple: 预测的类别和垃圾评论概率 / Predicted categories and spam probabilities
     """
     # 清洗新评论 / Clean new comments
     cleaned_comments = [clean_text(comment) for comment in new_comments]
@@ -24,7 +24,9 @@ def predict_comments(new_comments, vectorizer, model, tfidf_transformer=None):
     
     # 预测类别 / Predict categories
     predictions = model.predict(vectorized_comments)
-    return predictions
+    # 计算垃圾评论概率 / Calculate spam probabilities
+    probabilities = model.predict_proba(vectorized_comments)[:, 1]  # 获取垃圾评论概率
+    return predictions, probabilities
 
 if __name__ == "__main__":
     import pickle
@@ -36,10 +38,10 @@ if __name__ == "__main__":
 
     # 测试新评论 / Test new comments
     new_comments = [
-        "This video is amazing!",  # 非垃圾评论 / Not Spam
-        "Win $1000 now! Click here!",  # 垃圾评论 / Spam
-        "Subscribe for free gifts!"  # 垃圾评论 / Spam
+        "This video is amazing!",
+        "Win $1000 now! Click here!",
+        "Subscribe for free gifts!"
     ]
-    predictions = predict_comments(new_comments, vectorizer, model)
-    for comment, prediction in zip(new_comments, predictions):
-        print(f"Comment: {comment} -> {'Spam' if prediction == 1 else 'Not Spam'}")
+    predictions, probabilities = predict_comments(new_comments, vectorizer, model)
+    for comment, prediction, probability in zip(new_comments, predictions, probabilities):
+        print(f"Comment: {comment} -> {'Spam' if prediction == 1 else 'Not Spam'}, Probability: {probability:.2%}")
